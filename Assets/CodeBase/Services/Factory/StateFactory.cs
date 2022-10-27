@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using CodeBase.Infrastructure.States;
+using CodeBase.Tools;
 using Zenject;
 
 namespace CodeBase.Services.Factory
@@ -15,15 +16,14 @@ namespace CodeBase.Services.Factory
         public Dictionary<Type, IExitableState> CreateStates() =>
             new Dictionary<Type, IExitableState>()
             {
-                { typeof(BootstrapState), BindState<BootstrapState>() },
-                { typeof(LoadLevelState), BindState<LoadLevelState>() },
-                { typeof(GameLoopState), BindState<GameLoopState>() }
+                { typeof(BootstrapState), BindState(new BootstrapState()) },
+                { typeof(LoadLevelState), BindState(new LoadLevelState()) },
+                { typeof(GameLoopState), BindState(new GameLoopState()) }
             };
 
-        private IExitableState BindState<T>() where T : IExitableState
-        {
-            _container.Bind<T>().AsSingle();
-            return _container.Resolve<T>();
-        }
+        private IExitableState BindState<T>(T state) where T : class, IExitableState =>
+            state
+                .With(_ =>  _container.BindInstance(state).AsSingle())
+                .With(_ => _container.Inject(state));
     }
 }
